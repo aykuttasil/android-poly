@@ -11,31 +11,32 @@ import com.github.kittinunf.fuel.rx.rxResponseObject
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import processing.android.PFragment
-import processing.core.PApplet
-import processing.core.PConstants
-import processing.core.PShape
 import java.io.File
+
 
 /**
  * https://code.tutsplus.com/tutorials/how-to-use-free-3d-models-from-google-poly-in-android-apps--cms-31356
  */
 class MainActivity : AppCompatActivity() {
 
-    companion object {
-        const val key = "AIzaSyBgWDaqt4l1hW_bIMRhZvsPDU0H4Fv5mTU"
-        const val baseURL = "https://poly.googleapis.com/v1"
-    }
+    private val key = "AIzaSyBgWDaqt4l1hW_bIMRhZvsPDU0H4Fv5mTU"
+    private val baseURL = "https://poly.googleapis.com/v1"
 
-    val listURL = "$baseURL/assets"
-    // some asset id
-    val assetID = "assets/3yiIERrKNQr"
+    private val listURL = "$baseURL/assets"
+    private val assetID = "assets/3yiIERrKNQr"
+    private val assetURL = "$baseURL/$assetID"
 
-    // its url
-    val assetURL = "$baseURL/$assetID"
+    private lateinit var sketch: Sketch
+    private lateinit var sketchPoly: SketchPoly
+    private lateinit var sketchX: SketchX
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        sketch = Sketch()
+        sketchPoly = SketchPoly()
+        sketchX = SketchX()
 
         btnGetList.setOnClickListener {
             getAssetList()
@@ -50,29 +51,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadAsset() {
-        val fragment = PFragment(canvas)
-        fragment.setView(canvas_holder, this@MainActivity)
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        sketch.onRequestPermissionsResult(
+            requestCode, permissions, grantResults
+        )
     }
 
-    private val canvas = object : PApplet() {
-        var myPolyAsset: PShape? = null
-
-        override fun settings() {
-            fullScreen(PConstants.P3D)
-        }
-
-        override fun setup() {
-            myPolyAsset = loadShape(File(filesDir, "asset.obj").absolutePath)
-        }
-
-        override fun draw() {
-            background(0)
-            scale(-50f)
-            translate(-4f, -14f)
-
-            shape(myPolyAsset)
-        }
+    private fun loadAsset() {
+        val fragment = PFragment(sketchX)
+        fragment.setView(canvas_holder, this@MainActivity)
     }
 
     @SuppressLint("CheckResult")
@@ -137,7 +128,6 @@ class MainActivity : AppCompatActivity() {
                 Log.e("POLY", "An error occurred")
             })
     }
-
 
     @SuppressLint("CheckResult")
     fun getAssetList() {
